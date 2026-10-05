@@ -277,6 +277,7 @@
     .dialogue { display: grid; gap: 8px; max-height: 250px; overflow: auto; padding: 12px; border-left: 3px solid var(--gold); background: rgba(215,184,91,.06); }
     .dialogue-line { line-height: 1.65; color: #e0e5ef; font-size: .88rem; }
     .dialogue-line b { color: var(--gold-2); }
+    .ai-dialogue-badge { display: inline-flex; align-items: center; margin-left: 6px; padding: 1px 6px; border: 1px solid rgba(94,200,219,.35); border-radius: 999px; color: #8ed9e7; font-size: .68rem; vertical-align: 1px; }
     .memory-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .memory { padding: 4px 7px; border: 1px solid rgba(118,169,234,.22); color: #b9cae6; font-size: .7rem; }
     .profile-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -2914,7 +2915,7 @@
     }
 
     function dialogueHtml(entries, limit=12) {
-      return entries.slice(0,limit).map(e=>`<div class="dialogue-line">${e.playerLine?`<b>${esc(state.character.name)}</b>　“${esc(e.playerLine)}”<br>`:""}<b>${esc(e.name)}</b>　[${esc(e.expression)}] “${esc(e.line)}”</div>`).join("");
+      return entries.slice(0,limit).map(e=>`<div class="dialogue-line">${e.playerLine?`<b>${esc(state.character.name)}</b>　“${esc(e.playerLine)}”<br>`:""}<b>${esc(e.name)}</b>${e.ai?`<span class="ai-dialogue-badge">AI</span>`:""}　[${esc(e.expression)}] “${esc(e.line)}”</div>`).join("");
     }
 
     function npcCardHtml(npc) {
@@ -4376,7 +4377,7 @@
       const relation=state.npcRelations[npc.id],bio=periodProfile(npc),playerText=aiDialogueText(text);
       const response=await fetch(AI_CHAT_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"deepseek",npc:{id:npc.id,name:npc.name,role:npc.role,bio},player:aiPlayerSnapshot(),world:aiWorldSnapshot(),relation:aiSafeRelation(relation),recentDialogue:(state.dialogueLog||[]).slice(0,8),recentFreeCommands:(state.freeCommandHistory||[]).slice(0,6),playerText})});
       const data=await response.json().catch(()=>({}));
-      if(!response.ok)throw new Error(data.error||`AI 接口返回 ${response.status}`);
+      if(!response.ok)throw new Error(data.detail||data.error||`AI 接口返回 ${response.status}`);
       return{playerText,reply:data};
     }
     function applyAiNpcReply(npc,playerText,reply){
@@ -4404,7 +4405,7 @@
     const runNpcCommandAiBase=runNpcCommand;
     runNpcCommand=function(npc,text){if(isAiDialogueCommand(text))return aiTalkToNpc(npc,text);return runNpcCommandAiBase(npc,text);};
     const freeCommandHtmlAiBase=freeCommandHtml;
-    freeCommandHtml=function(context="story"){let html=freeCommandHtmlAiBase(context);if(context==="relations")html=html.replace('<div class="input-only-note">','<div class="ai-free-note"><b>AI 自由交谈</b><span class="ai-status-pill">deepseek-flash</span><br>输入“对唐三说：……”或“问小舞……”会调用统一后端 /api/chat；拥抱、送礼、切磋等规则动作仍由本地系统结算。</div><div class="input-only-note">');return html;};
+    freeCommandHtml=function(context="story"){let html=freeCommandHtmlAiBase(context);if(context==="relations")html=html.replace('<div class="input-only-note">','<div class="ai-free-note"><b>AI 自由交谈</b><span class="ai-status-pill">DeepSeek</span><br>输入“对唐三说：……”或“问小舞……”会调用统一后端 /api/chat；拥抱、送礼、切磋等规则动作仍由本地系统结算。</div><div class="input-only-note">');return html;};
     const hydrateAiChatBase=hydrateV8;
     hydrateV8=function(){hydrateAiChatBase();state.aiChatLog=state.aiChatLog||[];state.aiChatPending=null;};
     const resetStateAiChatBase=resetState;

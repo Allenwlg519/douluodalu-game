@@ -4,5 +4,5 @@ compatibility_date = "2026-10-05"
 
 [vars]
 AI_PROVIDER = "deepseek"
-AI_MODEL = "deepseek-flash"
+AI_MODEL = "deepseek-chat"
 AI_BASE_URL = "https://api.deepseek.com"
